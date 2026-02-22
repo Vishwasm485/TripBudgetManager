@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox spacing="15" alignment="CENTER"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="controller.CreateTripController"
+      prefWidth="400" prefHeight="320">
+
+    <padding>
+        <Insets top="20" bottom="20" left="20" right="20"/>
+    </padding>
+
+    <Label text="Create Trip" style="-fx-font-size:20px;"/>
+
+    <TextField fx:id="nameField" promptText="Trip Name"/>
+    <TextField fx:id="daysField" promptText="Number of Days"/>
+    <TextField fx:id="budgetField" promptText="Total Budget"/>
+
+    <Button text="Save Trip" onAction="#handleSave"/>
+
+    <Label fx:id="messageLabel"/>
+
+</VBox>

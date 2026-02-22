@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox spacing="20" alignment="CENTER"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="controller.DashboardController"
+      prefWidth="500" prefHeight="300">
+
+    <padding>
+        <Insets top="20" bottom="20" left="20" right="20"/>
+    </padding>
+
+    <Label text="Trip Budget Manager Dashboard"
+           style="-fx-font-size:22px; -fx-font-weight:bold;"/>
+
+    <Button text="Create Trip" onAction="#openCreateTrip"/>
+    <Button text="View Trips" onAction="#openViewTrips"/>
+    <Button text="Exit"/>
+
+</VBox>
