@@ -4,8 +4,12 @@ import database.DBConnection;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.control.TableRow;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.stage.Stage;
 import model.Trip;
 
 import java.sql.Connection;
@@ -29,6 +33,39 @@ public class ViewTripsController {
         budgetCol.setCellValueFactory(new PropertyValueFactory<>("budget"));
 
         loadTrips();
+
+        table.setRowFactory(tv -> {
+            TableRow<Trip> row = new TableRow<>();
+
+            row.setOnMouseClicked(event -> {
+                if (!row.isEmpty() && event.getClickCount() == 2) {
+                    Trip trip = row.getItem();
+                    openTripDetails(trip);
+                }
+            });
+
+            return row;
+        });
+    }
+
+    private void openTripDetails(Trip trip) {
+
+        try {
+            FXMLLoader loader =
+                    new FXMLLoader(getClass().getResource("/view/trip_details.fxml"));
+
+            Stage stage = new Stage();
+            stage.setScene(new Scene(loader.load()));
+            stage.setTitle("Trip Details");
+
+            TripDetailsController controller = loader.getController();
+            controller.setTrip(trip);
+
+            stage.show();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     private void loadTrips() {

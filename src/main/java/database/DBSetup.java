@@ -30,6 +30,22 @@ public class DBSetup {
                     budget REAL
                 )
               """);
+            stmt.execute("""
+                CREATE TABLE IF NOT EXISTS travelers(
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    trip_id INTEGER,
+                    name TEXT
+                )
+              """);
+            stmt.execute("""
+                CREATE TABLE IF NOT EXISTS expenses(
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    trip_id INTEGER,
+                    payer TEXT,
+                    amount REAL,
+                    description TEXT
+                )
+              """);
         } catch (Exception e) {
             e.printStackTrace();
         }
