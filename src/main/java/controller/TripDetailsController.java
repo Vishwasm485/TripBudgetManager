@@ -14,36 +14,49 @@ public class TripDetailsController {
 
     @FXML private Label titleLabel;
     @FXML private TextField nameField;
+
+    // Travelers table
     @FXML private TableView<Traveler> table;
     @FXML private TableColumn<Traveler,Integer> idCol;
     @FXML private TableColumn<Traveler,String> nameCol;
 
+    // Expense inputs
     @FXML private ComboBox<String> payerBox;
     @FXML private TextField amountField;
     @FXML private TextField descField;
-    @FXML private TextArea resultArea;
-    @FXML private Label totalLabel;
-    @FXML private Label shareLabel;
+
+    // Expense table
     @FXML private TableView<Expense> expenseTable;
     @FXML private TableColumn<Expense,String> payerCol;
     @FXML private TableColumn<Expense,Double> amountCol;
     @FXML private TableColumn<Expense,String> descCol;
+
+    // Result area
+    @FXML private TextArea resultArea;
+    @FXML private Label totalLabel;
+    @FXML private Label shareLabel;
+
     private Trip trip;
 
+    // ================= SET TRIP =================
     public void setTrip(Trip trip) {
         this.trip = trip;
         titleLabel.setText("Trip: " + trip.getName());
 
+        // traveler table
         idCol.setCellValueFactory(new PropertyValueFactory<>("id"));
         nameCol.setCellValueFactory(new PropertyValueFactory<>("name"));
+
+        // expense table
         payerCol.setCellValueFactory(new PropertyValueFactory<>("payer"));
         amountCol.setCellValueFactory(new PropertyValueFactory<>("amount"));
         descCol.setCellValueFactory(new PropertyValueFactory<>("description"));
 
+        loadTravelers();
         loadExpenses();
     }
 
-    // ---------- TRAVELERS ----------
+    // ================= TRAVELERS =================
     @FXML
     private void addTraveler() {
 
@@ -58,7 +71,9 @@ public class TripDetailsController {
             nameField.clear();
             loadTravelers();
 
-        } catch (Exception e) { e.printStackTrace(); }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     private void loadTravelers() {
@@ -75,16 +90,23 @@ public class TripDetailsController {
 
             while(rs.next()) {
                 String name = rs.getString("name");
-                list.add(new Traveler(rs.getInt("id"), name));
+
+                list.add(new Traveler(
+                        rs.getInt("id"),
+                        name
+                ));
+
                 payerBox.getItems().add(name);
             }
 
-        } catch (Exception e) { e.printStackTrace(); }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
         table.setItems(list);
     }
 
-    // ---------- EXPENSE ----------
+    // ================= EXPENSE =================
     @FXML
     private void addExpense() {
 
@@ -103,10 +125,61 @@ public class TripDetailsController {
             amountField.clear();
             descField.clear();
 
-        } catch (Exception e) { e.printStackTrace(); }
+            loadExpenses();   // refresh table
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
-    // ---------- SPLIT LOGIC ----------
+    private void loadExpenses(){
+
+        ObservableList<Expense> list = FXCollections.observableArrayList();
+
+        try(Connection conn = DBConnection.connect();
+            PreparedStatement ps =
+                    conn.prepareStatement("SELECT * FROM expenses WHERE trip_id=?")){
+
+            ps.setInt(1, trip.getId());
+            ResultSet rs = ps.executeQuery();
+
+            while(rs.next()){
+                list.add(new Expense(
+                        rs.getInt("id"),
+                        rs.getString("payer"),
+                        rs.getDouble("amount"),
+                        rs.getString("description")
+                ));
+            }
+
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+
+        expenseTable.setItems(list);
+    }
+
+    @FXML
+    private void deleteExpense(){
+
+        Expense e = expenseTable.getSelectionModel().getSelectedItem();
+        if(e==null) return;
+
+        try(Connection conn = DBConnection.connect();
+            PreparedStatement ps =
+                    conn.prepareStatement("DELETE FROM expenses WHERE id=?")){
+
+            ps.setInt(1, e.getId());
+            ps.executeUpdate();
+
+            loadExpenses();
+
+        }catch(Exception ex){
+            ex.printStackTrace();
+        }
+    }
+
+    // ================= SPLIT LOGIC =================
     @FXML
     private void calculateSplit() {
 
@@ -115,7 +188,7 @@ public class TripDetailsController {
 
         try (Connection conn = DBConnection.connect()) {
 
-            // Load travelers
+            // ---- load travelers ----
             PreparedStatement ps1 =
                     conn.prepareStatement("SELECT name FROM travelers WHERE trip_id=?");
             ps1.setInt(1, trip.getId());
@@ -127,7 +200,7 @@ public class TripDetailsController {
                 balance.put(name,0.0);
             }
 
-            // Load expenses
+            // ---- load expenses ----
             PreparedStatement ps2 =
                     conn.prepareStatement("SELECT payer,amount FROM expenses WHERE trip_id=?");
             ps2.setInt(1, trip.getId());
@@ -143,27 +216,31 @@ public class TripDetailsController {
                 balance.put(payer, balance.get(payer)+amt);
             }
 
+            if(people.isEmpty()) return;
+
             double share = total / people.size();
+
+            totalLabel.setText("Total Trip Cost: " + String.format("%.2f", total));
+            shareLabel.setText("Per Person Share: " + String.format("%.2f", share));
+
+            // ---- find top contributor ----
             String topPerson = null;
-            double max = 0;
+            double maxPaid = 0;
 
             for(String p: people){
-                double paidAmount = balance.get(p)+share; // original paid
-                if(paidAmount > max){
-                    max = paidAmount;
+                double paidAmount = balance.get(p);
+                if(paidAmount > maxPaid){
+                    maxPaid = paidAmount;
                     topPerson = p;
                 }
             }
 
-
-            totalLabel.setText("Total Trip Cost: " + String.format("%.2f", total));
-            shareLabel.setText("Per Person Share: " + String.format("%.2f", share));
-            // Convert to net balances
+            // ---- convert to net balances ----
             for(String p : people){
                 balance.put(p, balance.get(p) - share);
             }
 
-            // Split into creditors and debtors
+            // ---- creditors / debtors ----
             List<Map.Entry<String,Double>> creditors = new ArrayList<>();
             List<Map.Entry<String,Double>> debtors = new ArrayList<>();
 
@@ -172,6 +249,7 @@ public class TripDetailsController {
                 else if(e.getValue() < 0) debtors.add(e);
             }
 
+            // ---- build result ----
             StringBuilder result = new StringBuilder();
 
             result.append("Top contributor: ")
@@ -179,7 +257,10 @@ public class TripDetailsController {
                     .append(" (")
                     .append(String.format("%.2f", maxPaid))
                     .append(")\n\n");
-            result.append("Each should pay: ").append(share).append("\n\n");
+
+            result.append("Each should pay: ")
+                    .append(String.format("%.2f", share))
+                    .append("\n\n");
 
             int i=0, j=0;
 
@@ -212,46 +293,5 @@ public class TripDetailsController {
         } catch (Exception e) {
             e.printStackTrace();
         }
-    }
-    private void loadExpenses(){
-
-        ObservableList<Expense> list = FXCollections.observableArrayList();
-
-        try(Connection conn = DBConnection.connect();
-            PreparedStatement ps =
-                    conn.prepareStatement("SELECT * FROM expenses WHERE trip_id=?")){
-
-            ps.setInt(1, trip.getId());
-            ResultSet rs = ps.executeQuery();
-
-            while(rs.next()){
-                list.add(new Expense(
-                        rs.getInt("id"),
-                        rs.getString("payer"),
-                        rs.getDouble("amount"),
-                        rs.getString("description")
-                ));
-            }
-
-        }catch(Exception e){ e.printStackTrace(); }
-
-        expenseTable.setItems(list);
-    }
-    @FXML
-    private void deleteExpense(){
-
-        Expense e = expenseTable.getSelectionModel().getSelectedItem();
-        if(e==null) return;
-
-        try(Connection conn = DBConnection.connect();
-            PreparedStatement ps =
-                    conn.prepareStatement("DELETE FROM expenses WHERE id=?")){
-
-            ps.setInt(1, e.getId());
-            ps.executeUpdate();
-
-            loadExpenses();
-
-        }catch(Exception ex){ ex.printStackTrace(); }
     }
 }

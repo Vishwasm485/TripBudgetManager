@@ -19,7 +19,9 @@ public class Main extends Application {
                     new FXMLLoader(getClass().getResource("/view/login.fxml"));
 
             Scene scene = new Scene(loader.load(), 400, 250);
-
+            scene.getStylesheets().add(
+                    getClass().getResource("/style/app.css").toExternalForm()
+            );
             stage.setTitle("Trip Budget Manager");
             stage.setScene(scene);
             stage.show();

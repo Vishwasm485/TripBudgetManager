@@ -1,0 +1,68 @@
+/* ===== GLOBAL BACKGROUND ===== */
+.root{
+    -fx-font-family: "Inter", "Segoe UI", Arial;
+    -fx-background-color:
+        radial-gradient(center 30% 20%, radius 80%, #eef2ff, #e0e7ff 60%, #f8fafc);
+}
+
+/* ===== TOP NAV BAR ===== */
+.topbar{
+    -fx-background-color: linear-gradient(to right,#4f46e5,#7c3aed);
+    -fx-background-radius: 18;
+    -fx-padding: 18;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 25,0,0,8);
+}
+
+.top-title{
+    -fx-text-fill: white;
+    -fx-font-size: 24px;
+    -fx-font-weight: bold;
+}
+
+.top-sub{
+    -fx-text-fill: #e0e7ff;
+    -fx-font-size: 14px;
+}
+
+/* ===== GLASS CARD ===== */
+.card{
+    -fx-background-color: rgba(255,255,255,0.85);
+    -fx-background-radius: 20;
+    -fx-padding: 18;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.10), 30,0,0,10);
+}
+
+/* ===== BUTTON STYLE ===== */
+.button{
+    -fx-background-radius: 14;
+    -fx-font-weight: bold;
+    -fx-background-color: linear-gradient(to right,#6366f1,#8b5cf6);
+    -fx-text-fill: white;
+    -fx-padding: 8 18;
+}
+
+.button:hover{
+    -fx-background-color: linear-gradient(to right,#4f46e5,#7c3aed);
+}
+
+/* ===== INPUTS ===== */
+.text-field, .combo-box{
+    -fx-background-radius: 12;
+    -fx-border-radius: 12;
+    -fx-border-color: #e5e7eb;
+}
+
+/* ===== TABLE ===== */
+.table-view{
+    -fx-background-radius: 16;
+}
+
+/* ===== TAB STYLING ===== */
+.tab-pane *.tab-header-background{
+    -fx-background-color: transparent;
+}
+
+.tab-pane .tab{
+    -fx-background-radius: 12 12 0 0;
+    -fx-padding: 10 20;
+}
