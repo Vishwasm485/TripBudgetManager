@@ -1,53 +1,59 @@
 package controller;
 
 import database.DBConnection;
-import javafx.collections.*;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
-import model.*;
+import model.Expense;
+import model.Traveler;
+import model.Trip;
 
 import java.sql.*;
 import java.util.*;
 
 public class TripDetailsController {
 
+    // ===== HEADER =====
     @FXML private Label titleLabel;
-    @FXML private TextField nameField;
+    @FXML private Label totalLabel;
+    @FXML private Label shareLabel;
 
-    // Travelers table
+    // ===== TRAVELERS =====
+    @FXML private TextField nameField;
     @FXML private TableView<Traveler> table;
     @FXML private TableColumn<Traveler,Integer> idCol;
     @FXML private TableColumn<Traveler,String> nameCol;
 
-    // Expense inputs
+    // ===== EXPENSE INPUT =====
     @FXML private ComboBox<String> payerBox;
     @FXML private TextField amountField;
     @FXML private TextField descField;
 
-    // Expense table
+    // ===== EXPENSE TABLE =====
     @FXML private TableView<Expense> expenseTable;
     @FXML private TableColumn<Expense,String> payerCol;
     @FXML private TableColumn<Expense,Double> amountCol;
     @FXML private TableColumn<Expense,String> descCol;
 
-    // Result area
+    // ===== RESULT =====
     @FXML private TextArea resultArea;
-    @FXML private Label totalLabel;
-    @FXML private Label shareLabel;
 
     private Trip trip;
 
-    // ================= SET TRIP =================
+    // ======================================================
+    // SET TRIP
+    // ======================================================
     public void setTrip(Trip trip) {
         this.trip = trip;
         titleLabel.setText("Trip: " + trip.getName());
 
-        // traveler table
+        // Traveler table config
         idCol.setCellValueFactory(new PropertyValueFactory<>("id"));
         nameCol.setCellValueFactory(new PropertyValueFactory<>("name"));
 
-        // expense table
+        // Expense table config
         payerCol.setCellValueFactory(new PropertyValueFactory<>("payer"));
         amountCol.setCellValueFactory(new PropertyValueFactory<>("amount"));
         descCol.setCellValueFactory(new PropertyValueFactory<>("description"));
@@ -56,16 +62,21 @@ public class TripDetailsController {
         loadExpenses();
     }
 
-    // ================= TRAVELERS =================
+    // ======================================================
+    // TRAVELERS
+    // ======================================================
     @FXML
     private void addTraveler() {
 
+        if(nameField.getText().isBlank()) return;
+
         try (Connection conn = DBConnection.connect();
              PreparedStatement ps =
-                     conn.prepareStatement("INSERT INTO travelers(trip_id,name) VALUES(?,?)")) {
+                     conn.prepareStatement(
+                             "INSERT INTO travelers(trip_id,name) VALUES(?,?)")) {
 
             ps.setInt(1, trip.getId());
-            ps.setString(2, nameField.getText());
+            ps.setString(2, nameField.getText().trim());
             ps.executeUpdate();
 
             nameField.clear();
@@ -78,12 +89,15 @@ public class TripDetailsController {
 
     private void loadTravelers() {
 
-        ObservableList<Traveler> list = FXCollections.observableArrayList();
+        ObservableList<Traveler> list =
+                FXCollections.observableArrayList();
+
         payerBox.getItems().clear();
 
         try (Connection conn = DBConnection.connect();
              PreparedStatement ps =
-                     conn.prepareStatement("SELECT * FROM travelers WHERE trip_id=?")) {
+                     conn.prepareStatement(
+                             "SELECT * FROM travelers WHERE trip_id=?")) {
 
             ps.setInt(1, trip.getId());
             ResultSet rs = ps.executeQuery();
@@ -106,9 +120,14 @@ public class TripDetailsController {
         table.setItems(list);
     }
 
-    // ================= EXPENSE =================
+    // ======================================================
+    // EXPENSES
+    // ======================================================
     @FXML
     private void addExpense() {
+
+        if(payerBox.getValue() == null ||
+                amountField.getText().isBlank()) return;
 
         try (Connection conn = DBConnection.connect();
              PreparedStatement ps =
@@ -125,20 +144,28 @@ public class TripDetailsController {
             amountField.clear();
             descField.clear();
 
-            loadExpenses();   // refresh table
+            loadExpenses();
 
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
+    private void showAlert(String msg){
+        Alert alert = new Alert(Alert.AlertType.WARNING);
+        alert.setHeaderText(null);
+        alert.setContentText(msg);
+        alert.showAndWait();
+    }
 
     private void loadExpenses(){
 
-        ObservableList<Expense> list = FXCollections.observableArrayList();
+        ObservableList<Expense> list =
+                FXCollections.observableArrayList();
 
         try(Connection conn = DBConnection.connect();
             PreparedStatement ps =
-                    conn.prepareStatement("SELECT * FROM expenses WHERE trip_id=?")){
+                    conn.prepareStatement(
+                            "SELECT * FROM expenses WHERE trip_id=?")){
 
             ps.setInt(1, trip.getId());
             ResultSet rs = ps.executeQuery();
@@ -162,14 +189,17 @@ public class TripDetailsController {
     @FXML
     private void deleteExpense(){
 
-        Expense e = expenseTable.getSelectionModel().getSelectedItem();
-        if(e==null) return;
+        Expense selected =
+                expenseTable.getSelectionModel().getSelectedItem();
+
+        if(selected == null) return;
 
         try(Connection conn = DBConnection.connect();
             PreparedStatement ps =
-                    conn.prepareStatement("DELETE FROM expenses WHERE id=?")){
+                    conn.prepareStatement(
+                            "DELETE FROM expenses WHERE id=?")){
 
-            ps.setInt(1, e.getId());
+            ps.setInt(1, selected.getId());
             ps.executeUpdate();
 
             loadExpenses();
@@ -179,92 +209,119 @@ public class TripDetailsController {
         }
     }
 
-    // ================= SPLIT LOGIC =================
+    // ======================================================
+    // SPLIT LOGIC
+    // ======================================================
     @FXML
     private void calculateSplit() {
 
+        Map<String, Double> paidMap = new HashMap<>();
         Map<String, Double> balance = new HashMap<>();
+        Map<String, List<String>> contributionDetails = new HashMap<>();
         List<String> people = new ArrayList<>();
 
         try (Connection conn = DBConnection.connect()) {
 
-            // ---- load travelers ----
+            // Load travelers
             PreparedStatement ps1 =
                     conn.prepareStatement("SELECT name FROM travelers WHERE trip_id=?");
             ps1.setInt(1, trip.getId());
             ResultSet r1 = ps1.executeQuery();
 
-            while(r1.next()) {
+            while (r1.next()) {
                 String name = r1.getString("name");
                 people.add(name);
-                balance.put(name,0.0);
+                paidMap.put(name, 0.0);
+                balance.put(name, 0.0);
+                contributionDetails.put(name, new ArrayList<>());
             }
 
-            // ---- load expenses ----
+            // Load expenses
             PreparedStatement ps2 =
-                    conn.prepareStatement("SELECT payer,amount FROM expenses WHERE trip_id=?");
+                    conn.prepareStatement("SELECT payer,amount,description FROM expenses WHERE trip_id=?");
             ps2.setInt(1, trip.getId());
             ResultSet r2 = ps2.executeQuery();
 
             double total = 0;
 
-            while(r2.next()) {
+            while (r2.next()) {
                 String payer = r2.getString("payer");
                 double amt = r2.getDouble("amount");
+                String desc = r2.getString("description");
 
                 total += amt;
-                balance.put(payer, balance.get(payer)+amt);
+
+                paidMap.put(payer, paidMap.get(payer) + amt);
+                contributionDetails.get(payer)
+                        .add("• Paid " + String.format("%.2f", amt) + " Rs for " + desc);
             }
 
-            if(people.isEmpty()) return;
+            if (people.isEmpty()) {
+                resultArea.setText("No travelers added.");
+                return;
+            }
 
             double share = total / people.size();
 
-            totalLabel.setText("Total Trip Cost: " + String.format("%.2f", total));
-            shareLabel.setText("Per Person Share: " + String.format("%.2f", share));
+            totalLabel.setText("Total Trip Cost: " + String.format("%.2f", total) + " Rs");
+            shareLabel.setText("Per Person Share: " + String.format("%.2f", share) + " Rs");
 
-            // ---- find top contributor ----
+            // Calculate net balance
+            for (String p : people) {
+                double net = paidMap.get(p) - share;
+                balance.put(p, net);
+            }
+
+            // Find top contributor
             String topPerson = null;
             double maxPaid = 0;
-
-            for(String p: people){
-                double paidAmount = balance.get(p);
-                if(paidAmount > maxPaid){
-                    maxPaid = paidAmount;
+            for (String p : paidMap.keySet()) {
+                if (paidMap.get(p) > maxPaid) {
+                    maxPaid = paidMap.get(p);
                     topPerson = p;
                 }
             }
 
-            // ---- convert to net balances ----
-            for(String p : people){
-                balance.put(p, balance.get(p) - share);
+            // Separate creditors & debtors
+            List<Map.Entry<String, Double>> creditors = new ArrayList<>();
+            List<Map.Entry<String, Double>> debtors = new ArrayList<>();
+
+            for (var e : balance.entrySet()) {
+                if (e.getValue() > 0) creditors.add(e);
+                else if (e.getValue() < 0) debtors.add(e);
             }
 
-            // ---- creditors / debtors ----
-            List<Map.Entry<String,Double>> creditors = new ArrayList<>();
-            List<Map.Entry<String,Double>> debtors = new ArrayList<>();
-
-            for(var e : balance.entrySet()){
-                if(e.getValue() > 0) creditors.add(e);
-                else if(e.getValue() < 0) debtors.add(e);
-            }
-
-            // ---- build result ----
             StringBuilder result = new StringBuilder();
 
-            result.append("Top contributor: ")
+            result.append("========== TRIP SUMMARY ==========\n\n");
+            result.append("Total Trip Cost: ").append(String.format("%.2f", total)).append(" Rs\n");
+            result.append("Each Person Should Pay: ").append(String.format("%.2f", share)).append(" Rs\n\n");
+
+            result.append("Top Contributor: ")
                     .append(topPerson)
                     .append(" (")
                     .append(String.format("%.2f", maxPaid))
-                    .append(")\n\n");
+                    .append(" Rs)\n\n");
 
-            result.append("Each should pay: ")
-                    .append(String.format("%.2f", share))
-                    .append("\n\n");
+            result.append("========== CONTRIBUTIONS ==========\n\n");
 
-            int i=0, j=0;
+            for (String p : people) {
+                result.append(p).append(":\n");
+                if (contributionDetails.get(p).isEmpty()) {
+                    result.append("• No expenses paid\n");
+                } else {
+                    for (String detail : contributionDetails.get(p)) {
+                        result.append(detail).append("\n");
+                    }
+                }
+                result.append("\n");
+            }
 
-            while(i < debtors.size() && j < creditors.size()){
+            result.append("========== FINAL SETTLEMENT ==========\n\n");
+
+            int i = 0, j = 0;
+
+            while (i < debtors.size() && j < creditors.size()) {
 
                 var d = debtors.get(i);
                 var c = creditors.get(j);
@@ -275,17 +332,17 @@ public class TripDetailsController {
                 double pay = Math.min(debt, credit);
 
                 result.append(d.getKey())
-                        .append(" pays ")
-                        .append(c.getKey())
-                        .append(" ")
+                        .append(" has to pay ")
                         .append(String.format("%.2f", pay))
+                        .append(" Rs to ")
+                        .append(c.getKey())
                         .append("\n");
 
-                d.setValue(-(debt-pay));
-                c.setValue(credit-pay);
+                d.setValue(-(debt - pay));
+                c.setValue(credit - pay);
 
-                if(Math.abs(d.getValue()) < 0.01) i++;
-                if(Math.abs(c.getValue()) < 0.01) j++;
+                if (Math.abs(d.getValue()) < 0.01) i++;
+                if (Math.abs(c.getValue()) < 0.01) j++;
             }
 
             resultArea.setText(result.toString());

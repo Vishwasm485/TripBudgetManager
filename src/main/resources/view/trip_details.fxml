@@ -1,107 +1,95 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.geometry.*?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<BorderPane xmlns:fx="http://javafx.com/fxml"
-            fx:controller="controller.TripDetailsController"
-            prefWidth="720" prefHeight="760">
+<StackPane xmlns:fx="http://javafx.com/fxml"
+           fx:controller="controller.TripDetailsController"
+           prefWidth="1000"
+           prefHeight="750"
+           styleClass="root-bg">
 
-    <!-- TOP BAR -->
-    <top>
-        <VBox styleClass="topbar">
-            <Label fx:id="titleLabel" styleClass="top-title"/>
-            <HBox spacing="30">
-                <Label fx:id="totalLabel" styleClass="top-sub"/>
-                <Label fx:id="shareLabel" styleClass="top-sub"/>
-            </HBox>
-        </VBox>
-    </top>
+    <BorderPane maxWidth="950" maxHeight="700"
+                styleClass="main-container">
 
-    <!-- CENTER CONTENT -->
-    <center>
+        <!-- ================= SIDEBAR ================= -->
+        <left>
+            <VBox spacing="30" styleClass="sidebar">
+                <padding>
+                    <Insets top="30" left="25" right="25" bottom="30"/>
+                </padding>
 
-        <ScrollPane fitToWidth="true" style="-fx-background-color:transparent;">
-            <VBox spacing="22" alignment="TOP_CENTER" padding="20">
+                <Label fx:id="titleLabel" styleClass="logo-text"/>
 
-                <!-- TABS INSIDE CARD -->
-                <VBox styleClass="card" maxWidth="640">
+                <Button text="Travelers" styleClass="side-btn"/>
+                <Button text="Expenses" styleClass="side-btn"/>
+                <Button text="Settlement" styleClass="side-btn"/>
+            </VBox>
+        </left>
 
-                    <TabPane prefHeight="620">
+        <!-- ================= CONTENT ================= -->
+        <center>
+            <VBox spacing="25">
+                <padding>
+                    <Insets top="30" left="30" right="30" bottom="30"/>
+                </padding>
 
-                        <!-- TRAVELERS -->
-                        <Tab text="👥 Travelers">
-                            <VBox spacing="16">
-                                <padding>
-                                    <Insets top="15" right="15" bottom="15" left="15"/>
-                                </padding>
+                <!-- Top Stats Cards -->
+                <HBox spacing="20">
 
-                                <HBox spacing="10">
-                                    <TextField fx:id="nameField" promptText="Enter traveler name"/>
-                                    <Button text="+ Add Traveler" onAction="#addTraveler"/>
-                                </HBox>
+                    <VBox styleClass="stat-card">
+                        <Label text="Total Cost" styleClass="stat-title"/>
+                        <Label fx:id="totalLabel" styleClass="stat-value"/>
+                    </VBox>
 
-                                <TableView fx:id="table">
-                                    <columns>
-                                        <TableColumn fx:id="idCol" text="ID" prefWidth="80"/>
-                                        <TableColumn fx:id="nameCol" text="Traveler Name" prefWidth="380"/>
-                                    </columns>
-                                </TableView>
+                    <VBox styleClass="stat-card">
+                        <Label text="Per Person Share" styleClass="stat-title"/>
+                        <Label fx:id="shareLabel" styleClass="stat-value"/>
+                    </VBox>
 
-                            </VBox>
-                        </Tab>
+                </HBox>
 
-                        <!-- EXPENSES -->
-                        <Tab text="💳 Expenses">
-                            <VBox spacing="16" padding="15">
+                <!-- Expenses Section -->
+                <VBox styleClass="content-card" spacing="15">
 
-                                <HBox spacing="10">
-                                    <ComboBox fx:id="payerBox" promptText="Paid by"/>
-                                    <TextField fx:id="amountField" promptText="Amount"/>
-                                    <TextField fx:id="descField" promptText="Description"/>
-                                    <Button text="Add Expense" onAction="#addExpense"/>
-                                </HBox>
+                    <HBox spacing="10">
+                        <ComboBox fx:id="payerBox" promptText="Paid by"/>
+                        <TextField fx:id="amountField" promptText="Amount"/>
+                        <TextField fx:id="descField" promptText="Description"/>
+                        <Button text="Add" onAction="#addExpense" styleClass="primary-btn"/>
+                    </HBox>
 
-                                <TableView fx:id="expenseTable">
-                                    <columns>
-                                        <TableColumn fx:id="payerCol" text="Paid By" prefWidth="150"/>
-                                        <TableColumn fx:id="amountCol" text="Amount" prefWidth="120"/>
-                                        <TableColumn fx:id="descCol" text="Description" prefWidth="300"/>
-                                    </columns>
-                                </TableView>
+                    <TableView fx:id="expenseTable">
+                        <columns>
+                            <TableColumn fx:id="payerCol" text="Paid By" prefWidth="180"/>
+                            <TableColumn fx:id="amountCol" text="Amount" prefWidth="140"/>
+                            <TableColumn fx:id="descCol" text="Description" prefWidth="320"/>
+                        </columns>
+                    </TableView>
 
-                                <Button text="Delete Selected Expense"
-                                        onAction="#deleteExpense"/>
+                    <Button text="Delete Selected"
+                            onAction="#deleteExpense"
+                            styleClass="danger-btn"/>
+                </VBox>
 
-                            </VBox>
-                        </Tab>
+                <!-- Settlement Section -->
+                <VBox styleClass="content-card" spacing="15">
 
-                        <!-- SETTLEMENT -->
-                        <Tab text="🧾 Settlement">
-                            <VBox spacing="20" alignment="CENTER" padding="15">
+                    <Button text="Calculate Settlement"
+                            onAction="#calculateSplit"
+                            styleClass="primary-btn"
+                            prefWidth="250"/>
 
-                                <Button text="Calculate Split"
-                                        prefWidth="240"
-                                        prefHeight="48"
-                                        onAction="#calculateSplit"/>
-
-                                <TextArea fx:id="resultArea"
-                                          wrapText="true"
-                                          prefHeight="420"
-                                          style="-fx-background-radius:14;"/>
-
-                            </VBox>
-                        </Tab>
-
-                    </TabPane>
-
+                    <TextArea fx:id="resultArea"
+                              wrapText="true"
+                              prefHeight="200"
+                              styleClass="modern-textarea"/>
                 </VBox>
 
             </VBox>
-        </ScrollPane>
+        </center>
 
-    </center>
+    </BorderPane>
 
-</BorderPane>
+</StackPane>

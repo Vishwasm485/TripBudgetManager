@@ -1,0 +1,75 @@
+.root-bg {
+    -fx-background-color: linear-gradient(to bottom right, #1f1c2c, #928dab);
+}
+
+.main-container {
+    -fx-background-color: rgba(255,255,255,0.08);
+    -fx-background-radius: 20;
+    -fx-border-radius: 20;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.4), 25, 0, 0, 10);
+}
+
+.sidebar {
+    -fx-background-color: rgba(0,0,0,0.25);
+    -fx-background-radius: 20 0 0 20;
+}
+
+.logo-text {
+    -fx-font-size: 20px;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+}
+
+.side-btn {
+    -fx-background-color: transparent;
+    -fx-text-fill: white;
+    -fx-font-size: 14px;
+}
+
+.side-btn:hover {
+    -fx-background-color: rgba(255,255,255,0.15);
+    -fx-background-radius: 8;
+}
+
+.stat-card {
+    -fx-background-color: rgba(255,255,255,0.15);
+    -fx-padding: 20;
+    -fx-background-radius: 15;
+}
+
+.stat-title {
+    -fx-text-fill: white;
+    -fx-font-size: 14px;
+}
+
+.stat-value {
+    -fx-text-fill: white;
+    -fx-font-size: 20px;
+    -fx-font-weight: bold;
+}
+
+.content-card {
+    -fx-background-color: rgba(255,255,255,0.12);
+    -fx-padding: 20;
+    -fx-background-radius: 15;
+}
+
+.primary-btn {
+    -fx-background-color: #6c63ff;
+    -fx-text-fill: white;
+    -fx-background-radius: 10;
+}
+
+.primary-btn:hover {
+    -fx-background-color: #574bff;
+}
+
+.danger-btn {
+    -fx-background-color: #ff4d4d;
+    -fx-text-fill: white;
+    -fx-background-radius: 10;
+}
+
+.modern-textarea {
+    -fx-background-radius: 12;
+}
