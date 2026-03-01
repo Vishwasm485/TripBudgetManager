@@ -1,10 +1,12 @@
 package controller;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Scene;
-import javafx.stage.Stage;
+
 import database.DBConnection;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.stage.Stage;
+import model.User;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -12,42 +14,90 @@ import java.sql.ResultSet;
 
 public class LoginController {
 
-    @FXML private TextField emailField;
+    @FXML private TextField usernameField;   // this will hold email
     @FXML private PasswordField passwordField;
-    @FXML private Label messageLabel;
 
+    // ================= LOGIN =================
     @FXML
-    private void handleLogin() {
+    private void login() {
 
-        String sql =
-                "SELECT * FROM users WHERE email=? AND password=?";
+        String email = usernameField.getText();
+        String password = passwordField.getText();
+
+        if (email.isBlank() || password.isBlank()) {
+            showAlert("Please fill all fields.");
+            return;
+        }
 
         try (Connection conn = DBConnection.connect();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+             PreparedStatement ps =
+                     conn.prepareStatement(
+                             "SELECT * FROM users WHERE email=? AND password=?")) {
 
-            ps.setString(1, emailField.getText());
-            ps.setString(2, passwordField.getText());
+            ps.setString(1, email);
+            ps.setString(2, password);
 
             ResultSet rs = ps.executeQuery();
 
             if (rs.next()) {
-                FXMLLoader loader =
-                        new FXMLLoader(getClass().getResource("/view/dashboard.fxml"));
 
-                Stage stage = new Stage();
-                stage.setScene(new Scene(loader.load()));
-                stage.setTitle("Dashboard");
-                stage.show();
+                User user = new User(
+                        rs.getInt("id"),
+                        rs.getString("email"),
+                        rs.getString("password")
+                );
 
-// close login window
-                ((Stage) emailField.getScene().getWindow()).close();
+                openDashboard(user);
+
             } else {
-                messageLabel.setText("Invalid login");
+                showAlert("Invalid credentials.");
             }
 
         } catch (Exception e) {
             e.printStackTrace();
-            messageLabel.setText("Database error");
+            showAlert("Database error.");
         }
+    }
+
+    // ================= OPEN REGISTER =================
+    @FXML
+    private void openRegister() {
+
+        try {
+            FXMLLoader loader =
+                    new FXMLLoader(getClass().getResource("/view/register.fxml"));
+
+            Stage stage = (Stage) usernameField.getScene().getWindow();
+            stage.setScene(new Scene(loader.load()));
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    // ================= OPEN DASHBOARD =================
+    private void openDashboard(User user) {
+
+        try {
+            FXMLLoader loader =
+                    new FXMLLoader(getClass().getResource("/view/dashboard.fxml"));
+
+            Stage stage = (Stage) usernameField.getScene().getWindow();
+            stage.setScene(new Scene(loader.load()));
+
+            DashboardController controller = loader.getController();
+            controller.setUser(user);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    // ================= ALERT =================
+    private void showAlert(String msg) {
+        Alert alert = new Alert(Alert.AlertType.WARNING);
+        alert.setHeaderText(null);
+        alert.setContentText(msg);
+        alert.showAndWait();
     }
 }

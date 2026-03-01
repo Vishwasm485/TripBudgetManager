@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<AnchorPane xmlns:fx="http://javafx.com/fxml"
+            fx:controller="controller.RegisterController"
+            prefWidth="400" prefHeight="250">
+
+    <VBox spacing="15"
+          alignment="CENTER"
+          AnchorPane.topAnchor="30"
+          AnchorPane.bottomAnchor="30"
+          AnchorPane.leftAnchor="40"
+          AnchorPane.rightAnchor="40">
+
+        <Label text="Register"
+               style="-fx-font-size:18px; -fx-font-weight:bold;" />
+
+        <TextField fx:id="usernameField"
+                   promptText="Email" />
+
+        <PasswordField fx:id="passwordField"
+                       promptText="Password" />
+
+        <Button text="Register"
+                onAction="#register"
+                prefWidth="200" />
+
+        <!-- BACK TO LOGIN -->
+        <Button text="Back to Login"
+                onAction="#backToLogin"
+                prefWidth="200" />
+
+    </VBox>
+
+</AnchorPane>
